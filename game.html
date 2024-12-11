@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle Ship | Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="ocean">
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+    </div>
+    <main>
+        <div class="board">
+            <div class="cont">
+                <h1>Tablero enemigo</h1>
+                <div class="indicator-row">
+                    <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+                </div>
+                <div class="indicator-col">
+                    <span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span><span>I</span><span>J</span>
+                </div>
+                <div id="cpu-board" class="grid-container start">
+                </div>
+                <p class="countSunk">
+                    Barcos enemigos hundidos 
+                    <span id="cpuSunk">0</span>
+                    /17
+                </p>
+            </div>
+            <div class="cont">
+                <h1>Tu tablero</h1>
+                <div class="indicator-row">
+                    <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+                </div>
+                <div class="indicator-col">
+                    <span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span><span>I</span><span>J</span>
+                </div>
+                <div id="player-board" class="grid-container">
+                </div>
+                <p class="countSunk">
+                    Tus barcos hundidos 
+                    <span id="playerSunk">0</span>
+                    /17
+                </p>
+            </div>
+        </div>
+        <p id="status">Coloca tus 5 barcos...</p>
+        <div id="timer">00:00</div>
+
+    </main>
+    <script src="https://unpkg.com/boxicons@2.1.4/dist/boxicons.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

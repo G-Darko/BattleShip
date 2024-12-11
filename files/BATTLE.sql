@@ -1,0 +1,10 @@
+CREATE DATABASE BATTLE;
+
+USE BATTLE;
+
+CREATE TABLE jugadores (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) DEFAULT "ANONIMO",
+    tiempo TIME,
+    gano BIT
+);

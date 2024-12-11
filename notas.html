@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle Ship</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- <h2>Tablero del Jugador (Coloca tus barcos)</h2> -->
+    <div class="board">
+
+        <div id="player-board" class="grid-container"></div>
+        <!-- <h2>Tablero de la CPU (Ataca aquí)</h2> -->
+        <div id="cpu-board" class="grid-container"></div>
+    </div>
+    <p id="status"></p>
+    <button onclick="startGame()">Iniciar Juego</button>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
+
+
+
+<script>
+        class Board {
+            constructor(elementId) {
+                this.element = document.getElementById(elementId);
+                this.cells = Array(10).fill().map(() => Array(10).fill(null));
+                this.ships = [];
+                this.generateBoard();
+            }
+
+            generateBoard() {
+                this.element.innerHTML = '';
+                for (let i = 0; i < 10; i++) {
+                    for (let j = 0; j < 10; j++) {
+                        const cell = document.createElement('div');
+                        cell.classList.add('cell');
+                        cell.dataset.row = i;
+                        cell.dataset.col = j;
+                        this.element.appendChild(cell);
+                    }
+                }
+            }
+
+            placeShip(ship, isPlayer = true) {
+                let placed = false;
+                while (!placed) {
+                    const orientation = Math.random() > 0.5 ? 'horizontal' : 'vertical';
+                    const row = Math.floor(Math.random() * 10);
+                    const col = Math.floor(Math.random() * 10);
+                    if (this.canPlaceShip(ship, row, col, orientation)) {
+                        for (let i = 0; i < ship.size; i++) {
+                            const r = row + (orientation === 'vertical' ? i : 0);
+                            const c = col + (orientation === 'horizontal' ? i : 0);
+                            this.cells[r][c] = 'ship';
+                            if (isPlayer) {
+                                this.element.children[r * 10 + c].classList.add('ship');
+                            }
+                        }
+                        ship.cells = Array(ship.size).fill(false); // Cada celda no ha sido golpeada aún
+                        ship.position = { row, col, orientation };
+                        this.ships.push(ship);
+                        placed = true;
+                    }
+                }
+            }
+
+            canPlaceShip(ship, row, col, orientation) {
+                for (let i = 0; i < ship.size; i++) {
+                    const r = row + (orientation === 'vertical' ? i : 0);
+                    const c = col + (orientation === 'horizontal' ? i : 0);
+                    if (r >= 10 || c >= 10 || this.cells[r][c] === 'ship') {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            receiveAttack(row, col) {
+                const cellStatus = this.cells[row][col];
+                if (cellStatus === 'ship') {
+                    this.cells[row][col] = 'hit';
+
+
+                    // Encuentra el barco golpeado y actualiza su array de celdas
+                    for (const ship of this.ships) {
+                        if (ship.position) {
+                            const { row: shipRow, col: shipCol, orientation } = ship.position;
+                            for (let i = 0; i < ship.size; i++) {
+                                const r = shipRow + (orientation === 'vertical' ? i : 0);
+                                const c = shipCol + (orientation === 'horizontal' ? i : 0);
+                                if (r === row && c === col) {
+                                    ship.cells[i] = true; // Marca esta parte del barco como golpeada
+                                }
+                            }
+                        }
+                    }
+
+
+                    return 'hit';
+                } else {
+                    this.cells[row][col] = 'miss';
+                    return 'miss';
+                }
+            }
+
+            allShipsSunk() {
+                return this.ships.every(ship => ship.cells.every(cell => cell));
+                console.log(this.ships);
+            }
+        }
+
+        class Ship {
+            constructor(size) {
+                this.size = size;
+                this.cells = Array(size).fill(false);
+            }
+        }
+
+        const playerBoard = new Board('player-board');
+        const cpuBoard = new Board('cpu-board');
+        let isPlayerTurn = true;
+        let gameOver = false;
+
+        function startGame() {
+            gameOver = false;
+            playerBoard.ships = [];
+            cpuBoard.ships = [];
+            placePlayerShips();
+            placeCPUShips();
+            document.getElementById('status').innerText = 'Juego iniciado. Turno del jugador';
+        }
+
+        function placePlayerShips() {
+            const shipSizes = [5, 4, 3, 3, 2];
+            shipSizes.forEach(size => playerBoard.placeShip(new Ship(size)));
+        }
+
+        function placeCPUShips() {
+            const shipSizes = [1, 1, 1, 1, 1];
+            shipSizes.forEach(size => cpuBoard.placeShip(new Ship(size), true));
+        }
+        cpuBoard.element.addEventListener('click', (e) => {
+            if (gameOver || !isPlayerTurn) return;
+
+            const row = parseInt(e.target.dataset.row);
+            const col = parseInt(e.target.dataset.col);
+
+            if (cpuBoard.cells[row][col] === 'hit' || cpuBoard.cells[row][col] === 'miss') {
+                alert('Ya atacaste esta posición.');
+                return;
+            }
+
+            const result = cpuBoard.receiveAttack(row, col);
+            e.target.classList.add(result);
+
+            if (cpuBoard.allShipsSunk()) {
+                document.getElementById('status').innerText = '¡Ganaste!';
+                gameOver = true;
+                return;
+            }
+
+            isPlayerTurn = false;
+            setTimeout(cpuAttack, 1000);
+        });
+
+        function cpuAttack() {
+            let row, col, result;
+            do {
+                row = Math.floor(Math.random() * 10);
+                col = Math.floor(Math.random() * 10);
+            } while (playerBoard.cells[row][col] === 'hit' || playerBoard.cells[row][col] === 'miss');
+
+            result = playerBoard.receiveAttack(row, col);
+            playerBoard.element.children[row * 10 + col].classList.add(result);
+
+            if (playerBoard.allShipsSunk()) {
+                document.getElementById('status').innerText = '¡La CPU ha ganado!';
+                gameOver = true;
+                return;
+            }
+
+            isPlayerTurn = true;
+            document.getElementById('status').innerText = 'Tu turno';
+        }
+    </script>
+
+
+    <!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle Ship</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Juego de Battle Ship</h1>
+    <div id="player-board" class="board-container">
+        <h2>Tablero del Jugador (Coloca tus barcos)</h2>
+        <div class="board"></div>
+    </div>
+    <div id="cpu-board" class="board-container">
+        <h2>Tablero de la CPU (Ataca aquí)</h2>
+        <div class="board"></div>
+    </div>
+    <p id="status">Coloca tus barcos para comenzar.</p>
+    <button id="start-game">Iniciar Juego</button>
+    <script src="app.js"></script>
+</body>
+</html>
